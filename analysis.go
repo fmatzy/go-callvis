@@ -21,11 +21,12 @@ type analysis struct {
 	result *pointer.Result
 }
 
-func doAnalysis(dir string, tests bool, args []string) error {
+func doAnalysis(dir string, tests bool, buildFlags []string, args []string) error {
 	cfg := &packages.Config{
-		Mode:  packages.LoadAllSyntax,
-		Tests: tests,
-		Dir:   dir,
+		Mode:       packages.LoadAllSyntax,
+		Tests:      tests,
+		Dir:        dir,
+		BuildFlags: buildFlags,
 	}
 	initial, err := packages.Load(cfg, args...)
 	if err != nil {

@@ -5,13 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go/build"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/pkg/browser"
@@ -36,10 +36,11 @@ var (
 
 	debugFlag   = flag.Bool("debug", false, "Enable verbose log.")
 	versionFlag = flag.Bool("version", false, "Show version and exit.")
+	tagsFlag    = []string{}
 )
 
 func init() {
-	flag.Var((*buildutil.TagsFlag)(&build.Default.BuildTags), "tags", buildutil.TagsFlagDoc)
+	flag.Var((*buildutil.TagsFlag)(&tagsFlag), "tags", buildutil.TagsFlagDoc)
 	// Graphviz options
 	flag.UintVar(&minlen, "minlen", 2, "Minimum edge length (for wider output).")
 	flag.Float64Var(&nodesep, "nodesep", 0.35, "Minimum space between two adjacent nodes in the same rank (for taller output).")
@@ -101,10 +102,11 @@ func main() {
 	}
 
 	tests := *testFlag
+	buildFlags := makeBuildFlags(tagsFlag)
 	httpAddr := *httpFlag
 	urlAddr := parseHTTPAddr(httpAddr)
 
-	if err := doAnalysis("", tests, args); err != nil {
+	if err := doAnalysis("", tests, buildFlags, args); err != nil {
 		log.Fatal(err)
 	}
 
@@ -137,6 +139,14 @@ func parseHTTPAddr(addr string) string {
 		Host:   fmt.Sprintf("%s:%s", host, port),
 	}
 	return u.String()
+}
+
+func makeBuildFlags(buildTags []string) []string {
+	tags := strings.Join(buildTags, " ")
+	return []string{
+		"-tags",
+		tags,
+	}
 }
 
 func openBrowser(url string) {
